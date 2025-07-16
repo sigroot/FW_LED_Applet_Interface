@@ -1,9 +1,9 @@
 //! Written by Sigroot
 //! sigroot_applet_interface - A Rust interface structure for Framework LED Matrix
-//! 
+//!
 //! Interface library contains an AppletInterface struct for communicating with
 //! the LED matrix board program
-//! 
+//!
 //! new() requires the localhost's port that is currently used by the LED matrix
 //! board program, the applet number being interfaced with (0 is the top row
 //! status bar, 1-3 are the applets, 4-256 are invalid), and the separator type
@@ -12,7 +12,7 @@
 //! set_grid(), set_point(), and set_bar() modify the struct's internal grid and
 //! separator while write_grid() and write_bar() send both to the LED matrix board
 //! program respectively
-//! 
+//!
 //! Actual communication is in the following format:
 //!
 //! Communication is over TCP
@@ -33,11 +33,11 @@
 //!         1 - Applet separator is solid (all LED's on)
 //!         2 - Applet separator is dotted (alternating LED's on & off)
 //!         3 - Applet seprator is variable (default off)
-//! 
+//!
 //! UpdateGrid - Rewrites the current 9x10 applet grid with new values
-//!     Parameters: 90 u8 representing grid brightnesses - rows then columns 
+//!     Parameters: 90 u8 representing grid brightnesses - rows then columns
 //!                 (1st 10 is row1, 2nd 10 is row2, etc.)
-//! 
+//!
 //! UpdateBar - Rewrites the current 9x1 applet separator
 //!     Parameters: 9 u8 representing separator brightnesses
 //!     Note: Error 32 returned if bar is not variable
@@ -55,9 +55,9 @@
 //! 40:	    Invalid separator value when creating applet
 //! 255:	Unknown error
 
+use serde::Serialize;
+use std::io::{Error, ErrorKind, Read, Result, Write};
 use std::net::{SocketAddr, TcpStream};
-use std::io::{Result, Error, ErrorKind, Read, Write};
-use serde::{Serialize};
 
 pub struct AppletInterface {
     stream: TcpStream,
@@ -71,11 +71,11 @@ impl AppletInterface {
     pub fn new(port: u16, app_num: u8, separator_type: Separator) -> Result<Self> {
         // Fail if app_num is invalid
         if app_num > 3 {
-            return Err(Error::new(ErrorKind::InvalidInput, "app_num maximum is 3"))
+            return Err(Error::new(ErrorKind::InvalidInput, "app_num maximum is 3"));
         }
 
         // Create TCP stream
-        let local_addr = SocketAddr::from(([127,0,0,1], port));
+        let local_addr = SocketAddr::from(([127, 0, 0, 1], port));
         let mut stream = TcpStream::connect(local_addr)?;
 
         // Generate CreateApplet command
@@ -86,7 +86,7 @@ impl AppletInterface {
                 Separator::Empty => [0].to_vec(),
                 Separator::Solid => [1].to_vec(),
                 Separator::Dotted => [2].to_vec(),
-                Separator::Variable => [3].to_vec(),                
+                Separator::Variable => [3].to_vec(),
             },
         };
 
@@ -96,7 +96,12 @@ impl AppletInterface {
 
         let mut buffer: [u8; 1] = [255];
         stream.read_exact(&mut buffer)?;
-        if buffer[0] != 0 {return Err(Error::new(ErrorKind::ConnectionRefused, "Board refused connection"))}
+        if buffer[0] != 0 {
+            return Err(Error::new(
+                ErrorKind::ConnectionRefused,
+                "Board refused connection",
+            ));
+        }
 
         // Return applet
         Ok(Self {
@@ -113,8 +118,13 @@ impl AppletInterface {
     }
 
     pub fn set_point(&mut self, x: usize, y: usize, value: u8) -> Result<()> {
-        let row: &mut [u8; 9] = self.grid.get_mut(y).ok_or(Error::new(ErrorKind::InvalidInput, "Invalid row index"))?;
-        let pixel: &mut u8 = row.get_mut(x).ok_or(Error::new(ErrorKind::InvalidInput, "Invalid column index"))?;
+        let row: &mut [u8; 9] = self
+            .grid
+            .get_mut(y)
+            .ok_or(Error::new(ErrorKind::InvalidInput, "Invalid row index"))?;
+        let pixel: &mut u8 = row
+            .get_mut(x)
+            .ok_or(Error::new(ErrorKind::InvalidInput, "Invalid column index"))?;
         *pixel = value;
         Ok(())
     }
@@ -131,10 +141,9 @@ impl AppletInterface {
             parameters: vec![0; 90],
         };
 
-
         for i in 0..10 {
             for j in 0..9 {
-                command.parameters[i*9+j] = self.grid[i][j];
+                command.parameters[i * 9 + j] = self.grid[i][j];
             }
         }
 
@@ -144,17 +153,32 @@ impl AppletInterface {
 
         let mut buffer = [255; 1];
         self.stream.read_exact(&mut buffer)?;
-        
+
         match buffer[0] {
             0 => Ok(()),
-            10 => Err(Error::new(ErrorKind::InvalidData, "Board could not read data from stream")),
+            10 => Err(Error::new(
+                ErrorKind::InvalidData,
+                "Board could not read data from stream",
+            )),
             20 => Err(Error::new(ErrorKind::InvalidData, "Data not in UTF-8")),
             21 => Err(Error::new(ErrorKind::InvalidData, "Data not in JSON")),
-            30 => Err(Error::new(ErrorKind::InvalidInput, "Command uses invalid applet number")),
-            31 => Err(Error::new(ErrorKind::InvalidInput, "Command uses wrong applet number")),
+            30 => Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Command uses invalid applet number",
+            )),
+            31 => Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Command uses wrong applet number",
+            )),
             32 => Err(Error::new(ErrorKind::Other, "Command failed")),
-            33 => Err(Error::new(ErrorKind::AlreadyExists, "Applet already exists during create applet command")),
-            40 => Err(Error::new(ErrorKind::InvalidInput, "Command uses invalid separator number")),
+            33 => Err(Error::new(
+                ErrorKind::AlreadyExists,
+                "Applet already exists during create applet command",
+            )),
+            40 => Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Command uses invalid separator number",
+            )),
             _ => Err(Error::new(ErrorKind::Other, "Unkown Error")),
         }
     }
@@ -170,7 +194,12 @@ impl AppletInterface {
     pub fn write_bar(&mut self) -> Result<()> {
         match self.separator_type {
             Separator::Variable => (),
-            _ => return Err(Error::new(ErrorKind::InvalidInput, "separator not variable")),
+            _ => {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "separator not variable",
+                ))
+            }
         }
 
         let mut command = Command {
@@ -191,14 +220,29 @@ impl AppletInterface {
         self.stream.read_exact(&mut buffer)?;
         match buffer[0] {
             0 => Ok(()),
-            10 => Err(Error::new(ErrorKind::InvalidData, "Board could not read data from stream")),
+            10 => Err(Error::new(
+                ErrorKind::InvalidData,
+                "Board could not read data from stream",
+            )),
             20 => Err(Error::new(ErrorKind::InvalidData, "Data not in UTF-8")),
             21 => Err(Error::new(ErrorKind::InvalidData, "Data not in JSON")),
-            30 => Err(Error::new(ErrorKind::InvalidInput, "Command uses invalid applet number")),
-            31 => Err(Error::new(ErrorKind::InvalidInput, "Command uses wrong applet number")),
+            30 => Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Command uses invalid applet number",
+            )),
+            31 => Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Command uses wrong applet number",
+            )),
             32 => Err(Error::new(ErrorKind::Other, "Command failed")),
-            33 => Err(Error::new(ErrorKind::AlreadyExists, "Applet already exists during create applet command")),
-            40 => Err(Error::new(ErrorKind::InvalidInput, "Command uses invalid separator number")),
+            33 => Err(Error::new(
+                ErrorKind::AlreadyExists,
+                "Applet already exists during create applet command",
+            )),
+            40 => Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Command uses invalid separator number",
+            )),
             _ => Err(Error::new(ErrorKind::Other, "Unkown Error")),
         }
     }
@@ -237,7 +281,7 @@ mod tests {
         let mut pattern1 = [[0; 9]; 10];
         let mut pattern2 = [[0; 9]; 10];
         let mut pattern3 = [[0; 9]; 10];
-        
+
         for i in 0..10 {
             for j in 0..9 {
                 pattern1[i][j] = (i * 10 + j + 1) as u8;
@@ -284,14 +328,23 @@ mod tests {
 
         for i in 0..90 {
             let start = std::time::SystemTime::now();
-            
-            let mut grid = [[0;9];10];
-            grid[i/9][i%9] = 255;
+
+            let mut grid = [[0; 9]; 10];
+            grid[i / 9][i % 9] = 255;
             applet.set_grid(grid);
             applet.write_grid().unwrap();
 
-            while std::time::Duration::as_micros(&std::time::SystemTime::now().duration_since(start).unwrap()) < 1000000/FPS {}
-            println!("Grid: {:.2}", 1000000.0/(std::time::Duration::as_micros(&std::time::SystemTime::now().duration_since(start).unwrap())as f64));
+            while std::time::Duration::as_micros(
+                &std::time::SystemTime::now().duration_since(start).unwrap(),
+            ) < 1000000 / FPS
+            {}
+            println!(
+                "Grid: {:.2}",
+                1000000.0
+                    / (std::time::Duration::as_micros(
+                        &std::time::SystemTime::now().duration_since(start).unwrap()
+                    ) as f64)
+            );
         }
     }
 
@@ -302,12 +355,31 @@ mod tests {
         for i in 1..100 {
             let start = std::time::SystemTime::now();
 
-            applet.set_bar([(5*(i as u32) +1%255) as u8, (5*(i as u32) +25%255) as u8, (5*(i as u32) +50%255) as u8, (5*(i as u32) +75%255) as u8, (5*(i as u32) +100%255) as u8, (5*(i as u32) +125%255) as u8, (5*(i as u32) +150%255) as u8, (5*(i as u32) +175%255) as u8, (5*(i as u32) +200%255) as u8]);
+            applet.set_bar([
+                (5 * (i as u32) + 1 % 255) as u8,
+                (5 * (i as u32) + 25 % 255) as u8,
+                (5 * (i as u32) + 50 % 255) as u8,
+                (5 * (i as u32) + 75 % 255) as u8,
+                (5 * (i as u32) + 100 % 255) as u8,
+                (5 * (i as u32) + 125 % 255) as u8,
+                (5 * (i as u32) + 150 % 255) as u8,
+                (5 * (i as u32) + 175 % 255) as u8,
+                (5 * (i as u32) + 200 % 255) as u8,
+            ]);
             applet.write_bar().unwrap();
 
-            while std::time::Duration::as_micros(&std::time::SystemTime::now().duration_since(start).unwrap()) < 1000000/FPS {}
-            println!("Bar:  {:.2}", 1000000.0/(std::time::Duration::as_micros(&std::time::SystemTime::now().duration_since(start).unwrap())as f64));
-        }  
+            while std::time::Duration::as_micros(
+                &std::time::SystemTime::now().duration_since(start).unwrap(),
+            ) < 1000000 / FPS
+            {}
+            println!(
+                "Bar:  {:.2}",
+                1000000.0
+                    / (std::time::Duration::as_micros(
+                        &std::time::SystemTime::now().duration_since(start).unwrap()
+                    ) as f64)
+            );
+        }
     }
 
     #[test]
