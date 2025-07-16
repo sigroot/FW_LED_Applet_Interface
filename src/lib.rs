@@ -1,4 +1,4 @@
-//! Written by Sigroot
+// Written by Sigroot
 //! sigroot_applet_interface - A Rust interface structure for Framework LED Matrix
 //!
 //! Interface library contains an AppletInterface struct for communicating with
@@ -13,12 +13,12 @@
 //! separator while write_grid() and write_bar() send both to the LED matrix board
 //! program respectively
 //!
-//! Actual communication is in the following format:
+//! Raw communication is in the following format:
 //!
 //! Communication is over TCP
 //!
 //! Commands are sent with JSON encoded 'Command' strucutres in the format:
-//! ```ignore
+//! ```text
 //! {
 //!     "opcode": "<Command Name>",
 //!     "app_num": <Applet Number (0-2)>,
@@ -27,32 +27,57 @@
 //! ```
 //!
 //! Commands:
+//!
 //! CreateApplet - Creates a new applet assigned to the requesting TCP stream
-//!     Parameters: 1 u8 from 0-3
-//!         0 - Applet separator is empty (all LED's off)
-//!         1 - Applet separator is solid (all LED's on)
-//!         2 - Applet separator is dotted (alternating LED's on & off)
-//!         3 - Applet seprator is variable (default off)
+//!
+//! Parameters: 1 u8 from 0-3
+//! ```text
+//!     0 - Applet separator is empty (all LED's off)
+//!
+//!     1 - Applet separator is solid (all LED's on)
+//!
+//!     2 - Applet separator is dotted (alternating LED's on & off)
+//!
+//!     3 - Applet seprator is variable (default off)
+//! ```
 //!
 //! UpdateGrid - Rewrites the current 9x10 applet grid with new values
-//!     Parameters: 90 u8 representing grid brightnesses - rows then columns
-//!                 (1st 10 is row1, 2nd 10 is row2, etc.)
+//!
+//! Parameters:
+//!
+//!     90 u8 representing grid brightnesses - rows then columns (1st 10 is row1, 2nd 10 is row2, etc.)
 //!
 //! UpdateBar - Rewrites the current 9x1 applet separator
-//!     Parameters: 9 u8 representing separator brightnesses
+//!
+//! Parameters:
+//!
+//!     9 u8 representing separator brightnesses
+//!
 //!     Note: Error 32 returned if bar is not variable
 //!
+//!
 //! sig_rp2040_board will respond with a single u8 error code (not JSON):
+//!
 //! 0:	    Command successfully processed
+//!
 //! 10:	    Failed to read data from stream
+//!
 //! 20:	    Failed to parse stream data as UTF-8
+//!
 //! 21:	    Failed to parse stream data as JSON
+//!
 //! 30:	    Command uses invalid applet number (greater than 2)
+//!
 //! 31:	    Command attempts to modify applet stream did not create
+//!
 //! 32:     Attempt to update applet 0 grid
+//!
 //! 33:	    Error in commanding applet
+//!
 //! 34:	    Attempt to create new applet when applet already exists
+//!
 //! 40:	    Invalid separator value when creating applet
+//!
 //! 255:	Unknown error
 
 use serde::Serialize;
@@ -92,7 +117,7 @@ impl AppletInterface {
 
         // Send command over stream as json (faster if not using serde_json::to_writer())
         let json_string = serde_json::to_string(&command)?;
-        stream.write_all(json_string.as_bytes());
+        stream.write_all(json_string.as_bytes())?;
 
         let mut buffer: [u8; 1] = [255];
         stream.read_exact(&mut buffer)?;
@@ -149,7 +174,7 @@ impl AppletInterface {
 
         // Send command over stream as json (faster if not using serde_json::to_writer())
         let json_string = serde_json::to_string(&command)?;
-        self.stream.write_all(json_string.as_bytes());
+        self.stream.write_all(json_string.as_bytes())?;
 
         let mut buffer = [255; 1];
         self.stream.read_exact(&mut buffer)?;
@@ -214,7 +239,7 @@ impl AppletInterface {
 
         // Send command over stream as json (faster if not using serde_json::to_writer())
         let json_string = serde_json::to_string(&command)?;
-        self.stream.write_all(json_string.as_bytes());
+        self.stream.write_all(json_string.as_bytes())?;
 
         let mut buffer = [255; 1];
         self.stream.read_exact(&mut buffer)?;
