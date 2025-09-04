@@ -44,7 +44,7 @@
 //! UpdateGrid - Rewrites the current 9x10 applet grid with new values
 //!
 //! Parameters:
-//!
+//! ```text
 //!     90 u8 representing grid brightnesses - rows then columns (1st 10 is row1, 2nd 10 is row2, etc.)
 //!
 //! UpdateBar - Rewrites the current 9x1 applet separator
@@ -54,7 +54,7 @@
 //!     9 u8 representing separator brightnesses
 //!
 //!     Note: Error 32 returned if bar is not variable
-//!
+//! ```
 //!
 //! sig_rp2040_board will respond with a single u8 error code (not JSON):
 //!
