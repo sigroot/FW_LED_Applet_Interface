@@ -2,6 +2,12 @@
 name = "sigroot_applet_interface"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Library for communication to the FW_LED_Matrix_Board"
+repository = "https://github.com/sigroot/FW_LED_Applet_Interface"
+readme = "README.md"
+keywords = ["framework", "ledmatrix"]
+categories = ["graphics"]
 
 [dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
