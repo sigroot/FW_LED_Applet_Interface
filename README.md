@@ -9,7 +9,7 @@ This repository requires the [FW_LED_Matrix_Board](https://github.com/sigroot/FW
 
 Thanks to [Ecca](https://community.frame.work/t/use-cases-for-the-led-matrix-module/39171/75) on the Framework Forums for the idea of separating the LED matrix into separate modules.
 ## Capabilities
-This repository contains an 'AppletInterface' struct which can write to one applet of the [FW_LED_Matrix_Interface](https://github.com/sigroot/FW_LED_Matrix_Interface). When an AppletInterface is created, it is assigned the u8 app_num from 0-3. '0' creates the AppletInterface as the matrix interface's status bar and the struct will only accept modifications to its 9x1 separator bar. 1-3 creates the AppletInterface as one of the matrix interface's grids and the struct will accept modifications to its 9x1 separator bar or its 9x10 grid. 
+This repository contains an 'AppletInterface' struct which can write to one applet of the [FW_LED_Matrix_Board](https://github.com/sigroot/FW_LED_Matrix_Board). When an AppletInterface is created, it is assigned the u8 app_num from 0-3. '0' creates the AppletInterface as the matrix interface's status bar and the struct will only accept modifications to its 9x1 separator bar. 1-3 creates the AppletInterface as one of the matrix interface's grids and the struct will accept modifications to its 9x1 separator bar or its 9x10 grid. 
 
 The AppletInterface struct contains buffers for both its separator bar and its grid. These buffers have setter and getter methods. The struct has methods to write these buffers to the matrix interface. After writing, the AppletInterface will return a u8 error code.
 
