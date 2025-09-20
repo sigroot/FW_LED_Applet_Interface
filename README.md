@@ -3,9 +3,9 @@
 ## Preamble
 **THIS IS UNOFFICIAL SOFTWARE. I AM NOT AFFILIATED WITH FRAMEWORK**
 
-This repository contains a rust library for communicating with the [FW_LED_Matrix_Interface](https://github.com/sigroot/FW_LED_Matrix_Interface). A single 'AppletInterface' struct represents either a 9x1 status bar or one of four 9x11 applets on the matrix interface.
+This repository contains a rust library for communicating with the [FW_LED_Matrix_Board](https://github.com/sigroot/FW_LED_Matrix_Board) server. A single 'AppletInterface' struct represents either a 9x1 status bar or one of four 9x11 applets on the matrix interface.
 
-This repository requires the [FW_LED_Matrix_Interface](https://github.com/sigroot/FW_LED_Matrix_Interface) repositories. The matrix interface server must be running
+This repository requires the [FW_LED_Matrix_Board](https://github.com/sigroot/FW_LED_Matrix_Board) repository. The matrix board server must be running
 
 Thanks to [Ecca](https://community.frame.work/t/use-cases-for-the-led-matrix-module/39171/75) on the Framework Forums for the idea of separating the LED matrix into separate modules.
 ## Capabilities
